@@ -1,5 +1,3 @@
-import com.sun.istack.internal.NotNull;
-
 import java.lang.reflect.Array;
 import java.util.*;
 
@@ -241,7 +239,7 @@ public class FlexSet<E extends Identifiable> implements IdSet<E>, Identifiable {
     }
 
     @Override
-    public boolean removeAll(@NotNull Collection<?> c) {
+    public boolean removeAll(Collection<?> c) {
         Objects.requireNonNull(c);
         boolean result = false;
         for (Object o : c) {
@@ -311,16 +309,24 @@ public class FlexSet<E extends Identifiable> implements IdSet<E>, Identifiable {
             @Override
             public boolean hasNext() {
                 while (index < elements.length) {
-                    if (current == null) {
-                        current = elements[index];
-                    }
-                    if (current.e != null) {
+                    if (hasNextForCurrent()) {
                         return true;
                     }
-                    current = null;
-                    index++;
+                    prepareForNext();
                 }
                 return false;
+            }
+
+            private boolean hasNextForCurrent() {
+                if (current == null) {
+                    current = elements[index];
+                }
+                return current.e != null;
+            }
+
+            private void prepareForNext() {
+                current = null;
+                index++;
             }
 
             @Override
