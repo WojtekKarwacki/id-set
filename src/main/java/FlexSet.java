@@ -414,24 +414,19 @@ public class FlexSet<E extends Identifiable> implements IdSet<E>, Identifiable {
             }
             IdRef<E> current = this;
             while (current.hashCode < hashCode) {
-                if (xxx(e, hashCode, current)) return true;
+                if (setUpAtTheEndIfNeeded(e, hashCode, current)) return true;
                 current = current.next;
             }
             while (current.e != null) {
-                if (current.hashCode != hashCode) {
-                    setUpInTheMiddle(current, e, hashCode);
-                    return true;
-                }
-                if (current.e.equals(e)) {
-                    return false;
-                }
+                Boolean x = setUpInTheMiddleIfNeeded(current, e, hashCode);
+                if (x != null) return x;
                 current = current.next;
             }
             setUpAtTheEnd(current, e, hashCode);
             return true;
         }
 
-        private boolean xxx(E e, int hashCode, IdRef<E> current) {
+        private boolean setUpAtTheEndIfNeeded(E e, int hashCode, IdRef<E> current) {
             if (current.next == null) {
                 setUpAtTheEnd(current, e, hashCode);
                 return true;
@@ -443,6 +438,17 @@ public class FlexSet<E extends Identifiable> implements IdSet<E>, Identifiable {
             current.e = e;
             current.next = getEmpty();
             current.hashCode = hashCode;
+        }
+
+        private Boolean setUpInTheMiddleIfNeeded(IdRef<E> current, E e, int hashCode) {
+            if (current.hashCode != hashCode) {
+                setUpInTheMiddle(current, e, hashCode);
+                return true;
+            }
+            if (current.e.equals(e)) {
+                return false;
+            }
+            return null;
         }
 
         private void setUpInTheMiddle(IdRef<E> current, E e, int hashCode) {
