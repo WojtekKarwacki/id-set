@@ -1,3 +1,5 @@
+package idSet;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
@@ -18,76 +20,92 @@ public class FlexSet_ExtensiveTest {
     public void extensiveTest0() {
         FlexSet<TestObject_0> flexSet = FlexSet.instance();
         for (int i = 0; i < rep; i++) {
-            assertTrue(flexSet.add(new TestObject_0(i * 7)));
+            assertTrue(flexSet.add(testObject0(i)));
         }
         assertTrue(flexSet.size() == rep);
         for (int i = 0; i < rep; i++) {
-            assertTrue(flexSet.contains(new TestObject_0(i * 7)));
+            assertTrue(flexSet.contains(testObject0(i)));
         }
         for (int i = 0; i < rep; i++) {
-            assertTrue(flexSet.remove(new TestObject_0(i * 7)));
+            assertTrue(flexSet.remove(testObject0(i)));
         }
         assertTrue(flexSet.isEmpty());
         for (int i = 0; i < rep; i++) {
-            assertTrue(!flexSet.contains(new TestObject_0(i * 7)));
+            assertTrue(!flexSet.contains(testObject0(i)));
         }
+    }
+
+    private TestObject_0 testObject0(int i) {
+        return new TestObject_0(i*31);
     }
 
     @Test
     public void extensiveTest1() {
         FlexSet<TestObject_0> flexSet = FlexSet.instance();
         for (int i = 0; i < rep; i++) {
-            assertTrue(flexSet.add(new TestObject_0(i * 7)));
+            flexSet.add(testObject1(i));
         }
-        assertTrue(flexSet.size() == rep);
+        assertTrue(flexSet.size() <= rep);
         for (int i = 0; i < rep; i++) {
-            assertTrue(flexSet.contains(new TestObject_0(i * 7)));
+            assertTrue(flexSet.contains(testObject1(i)));
         }
         for (int i = 0; i < rep; i++) {
-            assertTrue(flexSet.remove(new TestObject_0(i * 7)));
+            flexSet.remove(testObject1(i));
         }
         assertTrue(flexSet.isEmpty());
         for (int i = 0; i < rep; i++) {
-            assertTrue(!flexSet.contains(new TestObject_0(i * 7)));
+            assertTrue(!flexSet.contains(testObject1(i)));
         }
+    }
+
+    private TestObject_0 testObject1(int i) {
+        return new TestObject_0(((i%2)*2-1) * i/2);
     }
 
     @Test
     public void extensiveTest2() {
         FlexSet<TestObject_0> flexSet = FlexSet.instance();
         for (int i = 0; i < rep; i++) {
-            assertTrue(flexSet.add(new TestObject_0(i * 512)));
+            assertTrue(flexSet.add(testObject2(i)));
         }
         assertTrue(flexSet.size() == rep);
         for (int i = 0; i < rep; i++) {
-            assertTrue(flexSet.contains(new TestObject_0(i * 512)));
+            assertTrue(flexSet.contains(testObject2(i)));
         }
         for (int i = 0; i < rep; i++) {
-            assertTrue(flexSet.remove(new TestObject_0(i * 512)));
+            assertTrue(flexSet.remove(testObject2(i)));
         }
         assertTrue(flexSet.isEmpty());
         for (int i = 0; i < rep; i++) {
-            assertTrue(!flexSet.contains(new TestObject_0(i * 512)));
+            assertTrue(!flexSet.contains(testObject2(i)));
         }
+    }
+
+    private TestObject_0 testObject2(int i) {
+        return new TestObject_0(i*512);
     }
 
     @Test
     public void extensiveTest3() {
         FlexSet<TestObject_0> flexSet = FlexSet.instance();
         for (int i = 0; i < rep; i++) {
-            flexSet.add(new TestObject_0(-i / 2));
+            flexSet.add(testObject3(i));
         }
         assertTrue(flexSet.size() == rep / 2);
         for (int i = 0; i < rep; i++) {
-            assertTrue(flexSet.contains(new TestObject_0(-i / 2)));
+            assertTrue(flexSet.contains(testObject3(i)));
         }
         for (int i = 0; i < rep; i++) {
-            flexSet.remove(new TestObject_0(-i / 2));
+            flexSet.remove(testObject3(i));
         }
         assertTrue(flexSet.isEmpty());
         for (int i = 0; i < rep; i++) {
-            assertTrue(!flexSet.contains(new TestObject_0(-i / 2)));
+            assertTrue(!flexSet.contains(testObject3(i)));
         }
+    }
+
+    private TestObject_0 testObject3(int i) {
+        return new TestObject_0(-i / 2);
     }
 
     @Test
@@ -97,20 +115,24 @@ public class FlexSet_ExtensiveTest {
             FlexSet<TestObject_0> flexSet = FlexSet.instance();
             int size = generator.nextInt(2048);
             for (int j = 0; j < size; j++) {
-                assertTrue(flexSet.add(new TestObject_0(j)));
+                assertTrue(flexSet.add(testObject4(j)));
             }
             assertTrue(flexSet.size() <= size);
             for (int j = 0; j < size; j++) {
-                assertTrue(flexSet.contains(new TestObject_0(j)));
+                assertTrue(flexSet.contains(testObject4(j)));
             }
             for (int j = 0; j < size; j++) {
-                assertTrue(flexSet.remove(new TestObject_0(j)));
+                assertTrue(flexSet.remove(testObject4(j)));
             }
             assertTrue(flexSet.isEmpty());
             for (int j = 0; j < size; j++) {
-                assertTrue(!flexSet.contains(new TestObject_0(j)));
+                assertTrue(!flexSet.contains(testObject4(j)));
             }
         }
+    }
+
+    private TestObject_0 testObject4(int i) {
+        return new TestObject_0(i);
     }
 
     @Test
@@ -129,5 +151,24 @@ public class FlexSet_ExtensiveTest {
         }
         assertTrue(flexSet.isEmpty());
     }
+
+    @Test
+    public void extensiveTest6() {
+        FlexSet<TestObject_0> flexSet0 = FlexSet.instance();
+        FlexSet<TestObject_0> flexSet1 = FlexSet.instance();
+        int capacity = flexSet0.capacity;
+        int limit = capacity/8;
+        for (int i = 0; i < limit; i++) {
+            flexSet0.add(testObject6(i, limit));
+            flexSet1.add(testObject6(limit-i-1, limit));
+        }
+        assertTrue(flexSet0.containsAll(flexSet1));
+        assertTrue(flexSet1.containsAll(flexSet0));
+    }
+
+    private TestObject_0 testObject6(int i, int limit) {
+        return new TestObject_0(i*limit);
+    }
+
 
 }

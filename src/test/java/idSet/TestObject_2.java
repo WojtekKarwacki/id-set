@@ -1,9 +1,12 @@
+package idSet;
+
 import java.util.Objects;
 
-public class TestObject_0 implements Identifiable {
-    private Integer id;
+public class TestObject_2 implements Identifiable {
 
-    TestObject_0(Integer id) {
+    private int id;
+
+    TestObject_2(int id) {
         this.id = id;
     }
 
@@ -16,13 +19,13 @@ public class TestObject_0 implements Identifiable {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        TestObject_0 that = (TestObject_0) o;
-        return id.equals(that.id);
+        TestObject_2 that = (TestObject_2) o;
+        return id == that.id;
     }
 
     @Override
     public int hashCode() {
-
         return Objects.hash(id);
     }
+
 }

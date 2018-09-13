@@ -1,3 +1,5 @@
+package idSet;
+
 import java.util.Objects;
 
 //todo test do equals i hashcode oraz test do getid
