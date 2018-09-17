@@ -144,6 +144,9 @@ public class FlexSet<E extends Identifiable> implements IdSet<E>, Identifiable {
         int hashCode = e.getId().hashCode();
         IdRef<E> idRef = elements[modHashCode(hashCode)];
         if (idRef.add(e, hashCode)) {
+            if (idRef.size == 7) { //todo do stalej, todo czy ++size czy size++
+                elements[modHashCode(hashCode)] = TreeIdRef.fromIdRef(idRef); //todo ponowne wyliczenie modhashcode
+            }
             adjustOrRebuildOnAdd();
             return true;
         }
@@ -402,13 +405,13 @@ public class FlexSet<E extends Identifiable> implements IdSet<E>, Identifiable {
                 '}';
     }
 
-    //todo equals sprawdzic, czy nie poprawia wynikow, jesli wyrzuce z metody
-    private final static class IdRef<E extends Identifiable> {
+    private static class IdRef<E extends Identifiable> {
 
+        private int size;
 
-        private E e;
-        private IdRef<E> next;
-        private int hashCode;
+        E e;
+        IdRef<E> next;
+        int hashCode;
 
         private IdRef() {
         }
@@ -417,12 +420,12 @@ public class FlexSet<E extends Identifiable> implements IdSet<E>, Identifiable {
             return e;
         }
 
-        public Object getId() {
-            return e.getId();
-        }
-
-        private boolean add(E e, int hashCode) {
-            return checkFirst(e) && (setUpIfEmpty(e, hashCode) || setUpAtTheBegginingIfNeeded(e, hashCode) || skipLowerHashCodesAndProceedWithAdding(e, hashCode));
+        boolean add(E e, int hashCode) {
+            if (checkFirst(e) && (setUpIfEmpty(e, hashCode) || setUpAtTheBegginingIfNeeded(e, hashCode) || skipLowerHashCodesAndProceedWithAdding(e, hashCode))) {
+                size++;
+                return true;
+            }
+            return false;
         }
 
         private boolean checkFirst(E e) {
@@ -503,7 +506,7 @@ public class FlexSet<E extends Identifiable> implements IdSet<E>, Identifiable {
             current.next = idRef;
         }
 
-        private E get(Object id, int hashCode) {
+        E get(Object id, int hashCode) {
             if (checkFirst(id)) {
                 return e;
             }
@@ -525,7 +528,7 @@ public class FlexSet<E extends Identifiable> implements IdSet<E>, Identifiable {
             return skipLowerHashCodesAndProceedWithGettingOrRemoving(id, hashCode, true);
         }
 
-        private E removeId(Object id, int hashCode) {
+        E removeId(Object id, int hashCode) { //todo size--
             if (e == null) return null;
             if (e.getId().equals(id)) {
                 return getRemovedAndAdjust(this);
@@ -599,5 +602,142 @@ public class FlexSet<E extends Identifiable> implements IdSet<E>, Identifiable {
         public int hashCode() {
             return Objects.hash(e, hashCode);
         }
+    }
+
+    private final static class TreeIdRef<E extends Identifiable> extends IdRef<E> implements Identifiable {
+
+        private TreeIdRef<E> left;
+        private TreeIdRef<E> right;
+
+        private FlexSet<E> block = FlexSet.instance(); //todo jaki instance?
+
+        private TreeIdRef() {
+        }
+
+        @Override
+        boolean add(E e, int hashCode) {
+            TreeIdRef<E> treeIdRef = addByHashCode(this, e, hashCode);
+            if (treeIdRef != null) {
+                if (treeIdRef.block.add(e)) {//todo ponowne liczenie hashcode wewnatrz, moze optymalizacja?
+                    next = treeIdRef;
+                    this.e = e;
+                    this.hashCode = hashCode;
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+            return true;
+
+        }
+
+        private TreeIdRef<E> addByHashCode(TreeIdRef<E> current, E e, int hashCode) {
+            TreeIdRef<E> previous = current;
+            //todo uproszczenie + refaktor + optymalizacja
+            if (hashCode < current.hashCode) {
+                current = current.left;
+                if (current == null) {
+                    current = new TreeIdRef<>();
+                    current.e = e;
+                    current.hashCode = hashCode;
+                    previous.left = current;
+                    return null;
+                }
+            } else if (hashCode > current.hashCode) {
+                current = current.right;
+                if (current == null) {
+                    current = new TreeIdRef<>();
+                    current.e = e;
+                    current.hashCode = hashCode;
+                    previous.right = current;
+                    return null;
+                }
+            } else {
+                return current;
+            }
+            return addByHashCode(current, e, hashCode);
+        }
+
+        @Override
+        E get(Object id, int hashCode) {
+            TreeIdRef<E> treeIdRef = findByHashCode(this, hashCode);
+            if (treeIdRef != null) {
+                if (treeIdRef.e.getId().equals(id)) {
+                    return treeIdRef.e;
+                }
+                return block.get(id);
+            }
+            return null;
+        }
+
+        private TreeIdRef<E> findByHashCode(TreeIdRef<E> current, int hashCode) {
+            TreeIdRef<E> previous = current;
+            if (hashCode < current.hashCode) {
+                current = current.left;
+                if (current == null) {
+                    return null;
+                }
+            } else if (hashCode > current.hashCode) {
+                current = current.right;
+                if (current == null) {
+                    return null;
+                }
+            } else {
+                return current;
+            }
+            return findByHashCode(current, hashCode);
+        }
+
+        @Override
+        E removeId(Object id, int hashCode) {
+            return null;
+        }
+
+        @Override
+        public E getId() {
+            return e;
+        }
+
+        private static <E extends Identifiable> TreeIdRef<E> fromIdRef(IdRef<E> idRef) {
+            //todo zrobic jakis sensowny falueOf w treeIfRefie - przepisuje niepotrzebnie
+            //todo + zamiast ladowac do twinsow za kazdym razem robie nowy tree
+            TreeIdRef<E> treeIdRef3 = new TreeIdRef<>();
+            treeIdRef3.e = idRef.next.next.next.e;
+            treeIdRef3.hashCode = idRef.next.next.next.hashCode;
+
+            TreeIdRef<E> treeIdRef1 = new TreeIdRef<>();
+            treeIdRef1.e = idRef.next.e;
+            treeIdRef1.hashCode = idRef.next.hashCode;
+
+            TreeIdRef<E> treeIdRef0 = new TreeIdRef<>();
+            treeIdRef0.e = idRef.e;
+            treeIdRef0.hashCode = idRef.hashCode;
+            treeIdRef1.left = treeIdRef0;
+
+            TreeIdRef<E> treeIdRef2 = new TreeIdRef<>();
+            treeIdRef2.e = idRef.next.next.e;
+            treeIdRef2.hashCode = idRef.next.next.hashCode;
+            treeIdRef1.right = treeIdRef2;
+
+            treeIdRef3.left = treeIdRef1;
+
+            TreeIdRef<E> treeIdRef5 = new TreeIdRef<>();
+            treeIdRef5.e = idRef.next.next.next.next.next.e;
+            treeIdRef5.hashCode = idRef.next.next.next.next.next.hashCode;
+
+            TreeIdRef<E> treeIdRef4 = new TreeIdRef<>();
+            treeIdRef4.e = idRef.next.next.next.next.e;
+            treeIdRef4.hashCode = idRef.next.next.next.next.hashCode;
+            treeIdRef5.left = treeIdRef4;
+
+            TreeIdRef<E> treeIdRef6 = new TreeIdRef<>();
+            treeIdRef6.e = idRef.next.next.next.next.next.next.e;
+            treeIdRef6.hashCode = idRef.next.next.next.next.next.next.hashCode;
+            treeIdRef5.right = treeIdRef6;
+
+            treeIdRef3.right = treeIdRef5;
+            return treeIdRef3;
+        }
+
     }
 }
