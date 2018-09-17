@@ -1,12 +1,10 @@
 package idSet;
 
-import idSet.FlexSet;
-import idSet.TestObject_0;
 import org.openjdk.jmh.annotations.*;
-import org.openjdk.jmh.infra.BenchmarkParams;
 import org.openjdk.jmh.infra.Blackhole;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
@@ -14,20 +12,21 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 @Measurement(iterations = 3, time = 2000, timeUnit = MILLISECONDS)
 @Fork(value = 2)
 @State(Scope.Thread)
-public class FlexSet_AddingBenchmark{
+public class FlexSet_ContainingBenchmark {
 
     public static void main(String[] args) throws Exception {
         org.openjdk.jmh.Main.main(args);
     }
 
-    private TestObject_0[] array;
+    private int[] keysArray;
+    private TestObject_0[] objectsArray;
 
     private HashMap<Integer, TestObject_0> hashMap;
     private HashSet<TestObject_0> hashSet;
     private FlexSet<TestObject_0> flexSet;
 
     //@Param({"1", "2", "4", "8", "16", "32", "64", "128", "256", "512", "1024", "2048", "4096", "8192", "16384", "32768", "65536", "131072"})
-    @Param({"1024"})
+    @Param({"256"})
     private int numberOfElements;
 
     @Setup
@@ -35,30 +34,36 @@ public class FlexSet_AddingBenchmark{
         hashMap = new HashMap<>();
         hashSet = new HashSet<>();
         flexSet = FlexSet.instance();
-        array = new TestObject_0[numberOfElements];
+        keysArray = new int[numberOfElements];
+        objectsArray = new TestObject_0[numberOfElements];
         for (int j = 0; j < numberOfElements; j++) {
-            array[j] = new TestObject_0(j);
+            TestObject_0 testObject = new TestObject_0(j);
+            keysArray[j] = j;
+            objectsArray[j] = testObject;
+            hashMap.put(j, testObject);
+            hashSet.add(testObject);
+            flexSet.add(testObject);
         }
     }
 
-    @Benchmark
+/*    @Benchmark
     public void timeHashMap(Blackhole bh) {
         for (int i = 0; i < numberOfElements; i++) {
-            bh.consume(hashMap.put(i, array[i]));
+            bh.consume(hashMap.get(keysArray[i]));
         }
-    }
+    }*/
 
     @Benchmark
     public void timeHashSet(Blackhole bh) {
         for (int i = 0; i < numberOfElements; i++) {
-            bh.consume(hashSet.add(array[i]));
+            bh.consume(hashSet.contains(objectsArray[i]));
         }
     }
 
     @Benchmark
     public void timeFlexSet(Blackhole bh) {
         for (int i = 0; i < numberOfElements; i++) {
-            bh.consume(flexSet.add(array[i]));
+            bh.consume(flexSet.contains(objectsArray[i]));
         }
     }
 

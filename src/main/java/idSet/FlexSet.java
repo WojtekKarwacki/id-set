@@ -402,6 +402,7 @@ public class FlexSet<E extends Identifiable> implements IdSet<E>, Identifiable {
                 '}';
     }
 
+    //todo equals sprawdzic, czy nie poprawia wynikow, jesli wyrzuce z metody
     private final static class IdRef<E extends Identifiable> {
 
 
@@ -421,11 +422,7 @@ public class FlexSet<E extends Identifiable> implements IdSet<E>, Identifiable {
         }
 
         private boolean add(E e, int hashCode) {
-            return !checkFirst(e) && (setUpIfEmpty(e, hashCode) || setUpAtTheBegginingIfNeeded(e, hashCode) || skipLowerHashCodesAndProceedWithAdding(e, hashCode));
-        }
-
-        private boolean checkFirst(E e) {
-            return e.equals(this.e);
+            return !e.equals(this.e) && (setUpIfEmpty(e, hashCode) || setUpAtTheBegginingIfNeeded(e, hashCode) || skipLowerHashCodesAndProceedWithAdding(e, hashCode));
         }
 
         private boolean setUpIfEmpty(E e, int hashCode) {
@@ -503,8 +500,17 @@ public class FlexSet<E extends Identifiable> implements IdSet<E>, Identifiable {
         }
 
         private E get(Object id, int hashCode) {
-            if (this.e == null) return null;
+            if (checkFirst(e, id)) {
+                return e;
+            }
+            if (this.hashCode > hashCode) {
+                return null;
+            }
             return skipLowerHashCodesAndProceedWithGetting(id, hashCode);
+        }
+
+        private boolean checkFirst(E e, Object id) {
+            return e != null && e.getId().equals(id);
         }
 
         private E skipLowerHashCodesAndProceedWithGetting(Object id, int hashCode) {
