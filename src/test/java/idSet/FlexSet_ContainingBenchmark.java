@@ -1,3 +1,4 @@
+/*
 package idSet;
 
 import org.openjdk.jmh.annotations.*;
@@ -25,8 +26,8 @@ public class FlexSet_ContainingBenchmark {
     private HashSet<TestObject_0> hashSet;
     private FlexSet<TestObject_0> flexSet;
 
-    //@Param({"1", "2", "4", "8", "16", "32", "64", "128", "256", "512", "1024", "2048", "4096", "8192", "16384", "32768", "65536", "131072"})
-    @Param({"256"})
+    @Param({"1", "2", "4", "8", "16", "32", "64", "128", "256", "512", "1024", "2048", "4096", "8192", "16384", "32768", "65536", "131072"})
+    //@Param({"256"})
     private int numberOfElements;
 
     @Setup
@@ -46,12 +47,13 @@ public class FlexSet_ContainingBenchmark {
         }
     }
 
-/*    @Benchmark
+    @Benchmark
     public void timeHashMap(Blackhole bh) {
         for (int i = 0; i < numberOfElements; i++) {
             bh.consume(hashMap.get(keysArray[i]));
         }
-    }*/
+    }
+
 
     @Benchmark
     public void timeHashSet(Blackhole bh) {
@@ -68,3 +70,4 @@ public class FlexSet_ContainingBenchmark {
     }
 
 }
+*/

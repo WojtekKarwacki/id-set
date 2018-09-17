@@ -422,7 +422,11 @@ public class FlexSet<E extends Identifiable> implements IdSet<E>, Identifiable {
         }
 
         private boolean add(E e, int hashCode) {
-            return !e.equals(this.e) && (setUpIfEmpty(e, hashCode) || setUpAtTheBegginingIfNeeded(e, hashCode) || skipLowerHashCodesAndProceedWithAdding(e, hashCode));
+            return checkFirst(e) && (setUpIfEmpty(e, hashCode) || setUpAtTheBegginingIfNeeded(e, hashCode) || skipLowerHashCodesAndProceedWithAdding(e, hashCode));
+        }
+
+        private boolean checkFirst(E e) {
+            return !e.equals(this.e);
         }
 
         private boolean setUpIfEmpty(E e, int hashCode) {
@@ -434,7 +438,7 @@ public class FlexSet<E extends Identifiable> implements IdSet<E>, Identifiable {
         }
 
         private boolean setUpAtTheBegginingIfNeeded(E e, int hashCode) {
-            if (this.hashCode > hashCode) {
+            if (isHashCodeInRange(hashCode)) {
                 setUpAtTheBeggining(e, hashCode);
                 return true;
             }
@@ -500,17 +504,21 @@ public class FlexSet<E extends Identifiable> implements IdSet<E>, Identifiable {
         }
 
         private E get(Object id, int hashCode) {
-            if (checkFirst(e, id)) {
+            if (checkFirst(id)) {
                 return e;
             }
-            if (this.hashCode > hashCode) {
+            if (isHashCodeInRange(hashCode)) {
                 return null;
             }
             return skipLowerHashCodesAndProceedWithGetting(id, hashCode);
         }
 
-        private boolean checkFirst(E e, Object id) {
-            return e != null && e.getId().equals(id);
+        private boolean checkFirst(Object id) {
+            return e == null || e.getId().equals(id);
+        }
+
+        private boolean isHashCodeInRange(int hashCode) {
+            return this.hashCode > hashCode;
         }
 
         private E skipLowerHashCodesAndProceedWithGetting(Object id, int hashCode) {
@@ -518,19 +526,15 @@ public class FlexSet<E extends Identifiable> implements IdSet<E>, Identifiable {
         }
 
         private E removeId(Object id, int hashCode) {
-            if (this.e == null) return null;
+            if (e == null) return null;
+            if (e.getId().equals(id)) {
+                return getRemovedAndAdjust(this);
+            }
             return skipLowerHashCodesAndProceedWithRemoving(id, hashCode);
         }
 
         private E skipLowerHashCodesAndProceedWithRemoving(Object id, int hashCode) {
             return skipLowerHashCodesAndProceedWithGettingOrRemoving(id, hashCode, false);
-        }
-
-        private E getRemovedAndAdjust(IdRef<E> current) {
-            IdRef<E> next = current.next;
-            E e = current.e;
-            adjustOnRemoval(current, next);
-            return e;
         }
 
         private void adjustOnRemoval(IdRef<E> current, IdRef<E> next) {
@@ -540,16 +544,29 @@ public class FlexSet<E extends Identifiable> implements IdSet<E>, Identifiable {
         }
 
         private E skipLowerHashCodesAndProceedWithGettingOrRemoving(Object id, int hashCode, boolean getting) {
-            IdRef<E> current = this;
-            while (current.hashCode < hashCode) {
-                if (current.e == null) return null;
-                current = current.next;
-            }
+            IdRef<E> current = skipLowerHashCodes(hashCode);
+            if (current == null) return null;
             while (current.e != null && current.hashCode == hashCode) {
                 if (isFound(current, id)) return getting ? current.e : getRemovedAndAdjust(current);
                 current = current.next;
             }
             return null;
+        }
+
+        private IdRef<E> skipLowerHashCodes(int hashCode) {
+            IdRef<E> current = next;
+            while (current.hashCode < hashCode) {
+                if (current.e == null) return null;
+                current = current.next;
+            }
+            return current;
+        }
+
+        private E getRemovedAndAdjust(IdRef<E> current) {
+            IdRef<E> next = current.next;
+            E e = current.e;
+            adjustOnRemoval(current, next);
+            return e;
         }
 
         private boolean isFound(IdRef<E> current, Object id) {

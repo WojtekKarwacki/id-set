@@ -27,17 +27,38 @@ public class FlexSet_AddingBenchmark{
     private FlexSet<TestObject_0> flexSet;
 
     //@Param({"1", "2", "4", "8", "16", "32", "64", "128", "256", "512", "1024", "2048", "4096", "8192", "16384", "32768", "65536", "131072"})
-    @Param({"1024"})
+    @Param({"131072"})
     private int numberOfElements;
 
+    //@Param({"0", "1", "2"})
+    @Param({"3"})
+    private int function;
+
     @Setup
-    public void setUp() {
+    public void setUp() throws Exception {
         hashMap = new HashMap<>();
         hashSet = new HashSet<>();
         flexSet = FlexSet.instance();
         array = new TestObject_0[numberOfElements];
-        for (int j = 0; j < numberOfElements; j++) {
-            array[j] = new TestObject_0(j);
+        for (int i = 0; i < numberOfElements; i++) {
+            TestObject_0 testObject;
+            switch (function) {
+                case 0:
+                    testObject = new TestObject_0(i);
+                    break;
+                case 1:
+                    testObject = new TestObject_0(i*i);
+                    break;
+                case 2:
+                    testObject = new TestObject_0(((i%2)*2-1)*i/2);
+                    break;
+                case 3:
+                    testObject = new TestObject_0((i*1024));
+                    break;
+                default:
+                    throw new Exception();
+            }
+            array[i] = testObject;
         }
     }
 
