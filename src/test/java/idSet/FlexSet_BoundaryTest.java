@@ -82,11 +82,23 @@ public class FlexSet_BoundaryTest {
     public void shouldAddObjectsToTheSameIdRef() {
         FlexSet<TestObject_0> flexSet = FlexSet.instance();
         int capacity = flexSet.capacity;
-        for (int i=0; i<33; i++) {
+        for (int i=0; i<8; i++) {
             flexSet.add(new TestObject_0(i*capacity));
         }
-        for (int i=0; i<33; i++) {
+        for (int i=0; i<8; i++) {
             assertTrue(flexSet.contains(new TestObject_0(i*capacity)));
+        }
+    }
+
+    @Test
+    public void shouldAddObjectsEvenForConstantIdAndHashCode() {
+        TestObject_5[] array = new TestObject_5[]{new TestObject_5(), new TestObject_5(), new TestObject_5(), new TestObject_5()};
+        FlexSet<TestObject_5> flexSet = FlexSet.instance();
+        for (TestObject_5 testObject_5 : array) {
+            flexSet.add(testObject_5);
+        }
+        for (TestObject_5 testObject_5 : array) {
+            assertTrue(flexSet.contains(testObject_5));
         }
     }
 

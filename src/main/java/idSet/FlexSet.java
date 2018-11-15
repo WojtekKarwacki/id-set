@@ -1,13 +1,16 @@
 package idSet;
 
+import sun.reflect.generics.tree.Tree;
+
 import java.lang.reflect.Array;
 import java.util.*;
 
-
+//fixme ostatni extensiveTest6 po przywroceniu default initial capacity na 1024
+//todo jeszcze zwrocic uwage na remove w treeidref po refaktorach
 public class FlexSet<E extends Identifiable> implements IdSet<E>, Identifiable {
 
     private static final int MAX_CAPACITY = Integer.MAX_VALUE;
-    private static final int DEFAULT_INITIAL_CAPACITY = 16;
+    private static final int DEFAULT_INITIAL_CAPACITY = 8;
 
     private IdRef<E>[] elements;
     private int size;
@@ -179,6 +182,9 @@ public class FlexSet<E extends Identifiable> implements IdSet<E>, Identifiable {
         while (idRef != null && idRef.e != null) {
             int hashCode = idRef.hashCode;
             elements[modHashCode(hashCode)].add(idRef.e, hashCode);
+            if (elements[modHashCode(hashCode)].size == 7) { //todo refaktor
+                elements[modHashCode(hashCode)] = TreeIdRef.fromIdRef(elements[modHashCode(hashCode)]);
+            }
             idRef = idRef.next;
         }
     }
@@ -604,12 +610,14 @@ public class FlexSet<E extends Identifiable> implements IdSet<E>, Identifiable {
         }
     }
 
-    private final static class TreeIdRef<E extends Identifiable> extends IdRef<E> implements Identifiable {
+
+    private static final class TreeIdRef<E extends Identifiable> extends IdRef<E> implements Identifiable {
 
         private TreeIdRef<E> left;
         private TreeIdRef<E> right;
 
-        private FlexSet<E> block = FlexSet.instance(); //todo jaki instance?
+        //todo do przemyslenia
+        private HashMap<Object, E> block = new HashMap<>();
 
         private TreeIdRef() {
         }
@@ -630,6 +638,11 @@ public class FlexSet<E extends Identifiable> implements IdSet<E>, Identifiable {
                     TreeIdRef<E> treeIdRef = new TreeIdRef<>();
                     treeIdRef.e = e;
                     treeIdRef.hashCode = hashCode;
+                    IdRef previousTemp = previous;
+                    while (previousTemp.next != null) {
+                        previousTemp = previousTemp.next;
+                    }
+                    previousTemp.next = treeIdRef;
                     previous.left = treeIdRef;
                     return true;
                 }
@@ -640,6 +653,11 @@ public class FlexSet<E extends Identifiable> implements IdSet<E>, Identifiable {
                     treeIdRef.e = e;
                     treeIdRef.hashCode = hashCode;
                     previous.right = treeIdRef;
+                    IdRef previousTemp = previous;
+                    while (previousTemp.next != null) {
+                        previousTemp = previousTemp.next;
+                    }
+                    previousTemp.next = treeIdRef;
                     return true;
                 }
             } else {
@@ -647,7 +665,7 @@ public class FlexSet<E extends Identifiable> implements IdSet<E>, Identifiable {
                     current.e = e;
                     return true;
                 } else {
-                    return current.block.add(e);
+                    return current.block.put(e.getId(), e) == null;
                 }
             }
             return addByHashCode(current, e, hashCode);
@@ -692,7 +710,7 @@ public class FlexSet<E extends Identifiable> implements IdSet<E>, Identifiable {
                 if (treeIdRef.e.getId().equals(id)) {
                     if (!treeIdRef.block.isEmpty()) {
                         E toRemove = null;
-                        for (E e : treeIdRef.block) {
+                        for (E e : treeIdRef.block.values()) {
                             toRemove = e;
                             break;
                         }
@@ -705,7 +723,7 @@ public class FlexSet<E extends Identifiable> implements IdSet<E>, Identifiable {
                     return toRemove;
                 }
 
-                return treeIdRef.block.removeId(id);
+                return treeIdRef.block.remove(id);
             }
             return null;
         }
@@ -740,7 +758,8 @@ public class FlexSet<E extends Identifiable> implements IdSet<E>, Identifiable {
             //todo zrobic jakis sensowny falueOf w treeIfRefie - przepisuje niepotrzebnie
             //todo + zamiast ladowac do block za kazdym razem robie nowy tree
             TreeIdRef<E> treeIdRef = new TreeIdRef<>();
-            treeIdRef.add(idRef.next.next.next.e, idRef.next.next.next.hashCode);
+            treeIdRef.e = idRef.next.next.next.e;
+            treeIdRef.hashCode = idRef.next.next.next.hashCode;
             treeIdRef.add(idRef.next.e, idRef.next.hashCode);
             treeIdRef.add(idRef.next.next.next.next.next.e, idRef.next.next.next.next.next.hashCode);
             treeIdRef.add(idRef.e, idRef.hashCode);

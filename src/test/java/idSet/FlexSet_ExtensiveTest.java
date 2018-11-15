@@ -14,7 +14,7 @@ import static junit.framework.TestCase.assertTrue;
 public class FlexSet_ExtensiveTest {
 
 
-    private int rep = 131072;
+    private int rep = 8;
 
     @Test
     public void extensiveTest0() {
@@ -69,16 +69,16 @@ public class FlexSet_ExtensiveTest {
             assertTrue(flexSet.add(testObject2(i)));
         }
         assertTrue(flexSet.size() == rep);
-//        for (int i = 0; i < rep; i++) {
-//            assertTrue(flexSet.contains(testObject2(i)));
-//        }
-//        for (int i = 0; i < rep; i++) {
-//            assertTrue(flexSet.remove(testObject2(i)));
-//        }
-//        assertTrue(flexSet.isEmpty());
-//        for (int i = 0; i < rep; i++) {
-//            assertTrue(!flexSet.contains(testObject2(i)));
-//        }
+        for (int i = 0; i < rep; i++) {
+            assertTrue(flexSet.contains(testObject2(i)));
+        }
+        for (int i = 0; i < rep; i++) {
+            assertTrue(flexSet.remove(testObject2(i)));
+        }
+        assertTrue(flexSet.isEmpty());
+        for (int i = 0; i < rep; i++) {
+            assertTrue(!flexSet.contains(testObject2(i)));
+        }
     }
 
     private TestObject_0 testObject2(int i) {
