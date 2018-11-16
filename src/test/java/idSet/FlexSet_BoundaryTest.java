@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 
+import static junit.framework.Assert.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -91,14 +92,36 @@ public class FlexSet_BoundaryTest {
     }
 
     @Test
-    public void shouldAddObjectsEvenForConstantIdAndHashCode() {
-        TestObject_5[] array = new TestObject_5[]{new TestObject_5(), new TestObject_5(), new TestObject_5(), new TestObject_5()};
+    public void shouldAddObjectsEvenForConstantHashCode() {
         FlexSet<TestObject_5> flexSet = FlexSet.instance();
+        int limit = flexSet.capacity;
+        TestObject_5[] array = new TestObject_5[limit];
+        for (int i=0; i<limit; i++) {
+            array[i] = new TestObject_5(i);
+        }
         for (TestObject_5 testObject_5 : array) {
             flexSet.add(testObject_5);
         }
+        assertTrue(flexSet.size() == limit);
         for (TestObject_5 testObject_5 : array) {
             assertTrue(flexSet.contains(testObject_5));
+        }
+    }
+
+    @Test
+    public void shouldAddObjectsEvenForConstantIdHashCode() {
+        FlexSet<TestObject_6> flexSet = FlexSet.instance();
+        int limit = flexSet.capacity;
+        TestObject_6[] array = new TestObject_6[limit];
+        for (int i=0; i<limit; i++) {
+            array[i] = new TestObject_6(i);
+        }
+        for (TestObject_6 testObject_6 : array) {
+            flexSet.add(testObject_6);
+        }
+        assertTrue(flexSet.size() == limit);
+        for (TestObject_6 testObject_6 : array) {
+            assertTrue(flexSet.contains(testObject_6));
         }
     }
 

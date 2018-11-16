@@ -27,7 +27,7 @@ public class FlexSet_AddingBenchmark{
     private FlexSet<TestObject_0> flexSet;
 
     //@Param({"1", "2", "4", "8", "16", "32", "64", "128", "256", "512", "1024", "2048", "4096", "8192", "16384", "32768", "65536", "131072"})
-    @Param({"131072"})
+    @Param({"4"})
     private int numberOfElements;
 
     //@Param({"0", "1", "2"})

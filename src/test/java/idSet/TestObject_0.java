@@ -24,7 +24,6 @@ public class TestObject_0 implements Identifiable {
 
     @Override
     public int hashCode() {
-
         return Objects.hash(id);
     }
 }

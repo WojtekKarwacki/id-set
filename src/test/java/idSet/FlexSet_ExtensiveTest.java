@@ -14,7 +14,7 @@ import static junit.framework.TestCase.assertTrue;
 public class FlexSet_ExtensiveTest {
 
 
-    private int rep = 8;
+    private int rep = 256;
 
     @Test
     public void extensiveTest0() {
