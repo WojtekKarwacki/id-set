@@ -272,4 +272,12 @@ public class FlexSet_BoundaryTest {
     }
 
 
+    @Test
+    public void xxx() {
+        FlexSet<TestObject_0> flexSet = FlexSet.instance();
+        for (int i=0; i<16; i++) {
+            flexSet.add( new TestObject_0((i*1024)));
+        }
+
+    }
 }

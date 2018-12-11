@@ -10,8 +10,8 @@ import java.util.*;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
-@Warmup(iterations = 1, time = 4000, timeUnit = MILLISECONDS)
-@Measurement(iterations = 3, time = 2000, timeUnit = MILLISECONDS)
+@Warmup(iterations = 1, time = 400, timeUnit = MILLISECONDS)
+@Measurement(iterations = 3, time = 200, timeUnit = MILLISECONDS)
 @Fork(value = 2)
 @State(Scope.Thread)
 public class FlexSet_AddingBenchmark{
@@ -34,6 +34,7 @@ public class FlexSet_AddingBenchmark{
     @Param({"3"})
     private int function;
 
+
     @Setup
     public void setUp() throws Exception {
         hashMap = new HashMap<>();
@@ -53,7 +54,7 @@ public class FlexSet_AddingBenchmark{
                     testObject = new TestObject_0(((i%2)*2-1)*i/2);
                     break;
                 case 3:
-                    testObject = new TestObject_0((i*1024));
+                    testObject = new TestObject_0((i*4096));
                     break;
                 default:
                     throw new Exception();
@@ -61,6 +62,7 @@ public class FlexSet_AddingBenchmark{
             array[i] = testObject;
         }
     }
+
 
     @Benchmark
     public void timeHashMap(Blackhole bh) {

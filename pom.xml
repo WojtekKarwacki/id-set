@@ -36,7 +36,23 @@
             <artifactId>jmh-generator-annprocess</artifactId>
             <version>${jmh.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>com.atlassian.jira</groupId>
+            <artifactId>jira-rest-java-client-core</artifactId>
+            <version>4.0.0</version>
+        </dependency>
+
+
     </dependencies>
+
+    <repositories>
+        <repository>
+            <id>Maven-Atlassian</id>
+            <name>Maven-Atlassian repo</name>
+            <url>https://maven.atlassian.com/content/repositories/atlassian-public/</url>
+        </repository>
+    </repositories>
 
     <build>
         <plugins>
