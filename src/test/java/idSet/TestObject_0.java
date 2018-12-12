@@ -9,7 +9,6 @@ public class TestObject_0 implements Identifiable {
 
     TestObject_0(Integer id) {
         this.id = id;
-        JiraRestClientFactory
     }
 
     @Override
