@@ -83,11 +83,28 @@ public class FlexSet_BoundaryTest {
     public void shouldAddObjectsToTheSameIdRef() {
         FlexSet<TestObject_0> flexSet = FlexSet.instance();
         int capacity = flexSet.capacity;
-        for (int i=0; i<8; i++) {
+        int limit = 256;
+        for (int i=-limit; i<limit; i++) {
             flexSet.add(new TestObject_0(i*capacity));
         }
-        for (int i=0; i<8; i++) {
+        for (int i=-limit; i<limit; i++) {
             assertTrue(flexSet.contains(new TestObject_0(i*capacity)));
+        }
+        assertTrue(flexSet.size() == 2*limit);
+    }
+
+    @Test
+    public void shouldRemoveObjectsFromTheSameIdRef() {
+        FlexSet<TestObject_0> flexSet = FlexSet.instance();
+        int limit = 256;
+        for (int i = 0; i<limit; i++) {
+            flexSet.add(new TestObject_0(i*limit));
+        }
+        for (int i=0; i<limit; i++) {
+            flexSet.remove(new TestObject_0(i*limit));
+        }
+        for (int i=0; i<limit; i++) {
+            assertTrue(!flexSet.contains(new TestObject_0(i*limit)));
         }
     }
 
@@ -126,32 +143,26 @@ public class FlexSet_BoundaryTest {
     }
 
     @Test
-    public void shouldRetainCapacityOnRemovingMethods() {
+    public void shouldShrinkOnRemoval() {
         FlexSet<TestObject_0> flexSet = FlexSet.instance();
-        for (int i=0; i<33; i++) {
+        for (int i=0; i<129; i++) {
             flexSet.add(new TestObject_0(i));
         }
         int capacity = flexSet.capacity;
-        flexSet.clear();
-        assertTrue(flexSet.capacity == capacity);
-
-        for (int i=0; i<33; i++) {
-            flexSet.add(new TestObject_0(i));
-        }
-        for (int i=0; i<33; i++) {
+        for (int i=0; i<129; i++) {
             flexSet.remove(new TestObject_0(i));
         }
-        assertTrue(flexSet.capacity == capacity);
+        assertTrue(flexSet.capacity != capacity);
 
-        for (int i=0; i<33; i++) {
+        for (int i=0; i<129; i++) {
             flexSet.add(new TestObject_0(i));
         }
         Collection<TestObject_0> c = new ArrayList<>();
-        for (int i=0; i<33; i++) {
+        for (int i=0; i<129; i++) {
             c.add(new TestObject_0(i));
         }
         flexSet.removeAll(c);
-        assertTrue(flexSet.capacity == capacity);
+        assertTrue(flexSet.capacity != capacity);
 
     }
 
@@ -258,26 +269,31 @@ public class FlexSet_BoundaryTest {
     }
 
     @Test
-    public void capacityAndRebuildThresholdShouldChangeOnRebuild() {
+    public void shouldExpandOnAddition() {
         FlexSet<TestObject_0> flexSet = FlexSet.instance();
         int capacity = flexSet.capacity;
         int modCapacity = flexSet.modCapacity;
-        int rebuildThreshold = flexSet.rebuildThreshold;
+        int rebuildThreshold = flexSet.expansionThreshold;
         for (int i=0; i<rebuildThreshold+1;i++) {
             flexSet.add(new TestObject_0(i));
         }
         assertTrue(capacity == flexSet.capacity/2);
         assertTrue(modCapacity == (flexSet.modCapacity-1)/2);
-        assertTrue(rebuildThreshold != flexSet.rebuildThreshold);
+        assertTrue(rebuildThreshold != flexSet.expansionThreshold);
     }
-
 
     @Test
-    public void xxx() {
+    public void shouldTreeify() {
         FlexSet<TestObject_0> flexSet = FlexSet.instance();
-        for (int i=0; i<16; i++) {
-            flexSet.add( new TestObject_0((i*1024)));
+        for (int i=0; i<FlexSet.ID_REF_TREEIFY_THRESHOLD; i++) {
+            flexSet.add(new TestObject_0(i*1024));
         }
-
+        assertTrue(flexSet.elements[0] instanceof FlexSet.TreeIdRef);
+        for (int i=0; i<FlexSet.ID_REF_TREEIFY_THRESHOLD-FlexSet.ID_REF_UNTREEIFY_THRESHOLD; i++) {
+            flexSet.remove(new TestObject_0(i*1024));
+        }
+        assertTrue(!(flexSet.elements[0] instanceof FlexSet.TreeIdRef));
     }
+
+
 }

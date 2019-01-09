@@ -1,7 +1,5 @@
 package idSet;
 
-import com.atlassian.jira.rest.client.api.JiraRestClientFactory;
-
 import java.util.Objects;
 
 public class TestObject_0 implements Identifiable {
@@ -21,7 +19,7 @@ public class TestObject_0 implements Identifiable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         TestObject_0 that = (TestObject_0) o;
-        return id.equals(that.id);
+        return id == that.id;
     }
 
     @Override

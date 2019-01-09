@@ -36,7 +36,7 @@ public class FlexSet_ExtensiveTest {
     }
 
     private TestObject_0 testObject0(int i) {
-        return new TestObject_0(i*31);
+        return new TestObject_0(i * 31);
     }
 
     @Test
@@ -59,7 +59,7 @@ public class FlexSet_ExtensiveTest {
     }
 
     private TestObject_0 testObject1(int i) {
-        return new TestObject_0(((i%2)*2-1) * i/2);
+        return new TestObject_0(((i % 2) * 2 - 1) * i / 2);
     }
 
     @Test
@@ -82,7 +82,7 @@ public class FlexSet_ExtensiveTest {
     }
 
     private TestObject_0 testObject2(int i) {
-        return new TestObject_0(i*512);
+        return new TestObject_0(i * 512);
     }
 
     @Test
@@ -157,17 +157,17 @@ public class FlexSet_ExtensiveTest {
         FlexSet<TestObject_0> flexSet0 = FlexSet.instance();
         FlexSet<TestObject_0> flexSet1 = FlexSet.instance();
         int capacity = flexSet0.capacity;
-        int limit = capacity/8;
+        int limit = capacity / 8;
         for (int i = 0; i < limit; i++) {
             flexSet0.add(testObject6(i, limit));
-            flexSet1.add(testObject6(limit-i-1, limit));
+            flexSet1.add(testObject6(limit - i - 1, limit));
         }
         assertTrue(flexSet0.containsAll(flexSet1));
         assertTrue(flexSet1.containsAll(flexSet0));
     }
 
     private TestObject_0 testObject6(int i, int limit) {
-        return new TestObject_0(i*limit);
+        return new TestObject_0(i * limit);
     }
 
 
