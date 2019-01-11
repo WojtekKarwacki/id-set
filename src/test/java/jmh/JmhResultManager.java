@@ -28,7 +28,7 @@ public class JmhResultManager {
             e.printStackTrace();
         }
         JmhResult jmhResult = jmhResultReader.getBenchmarkResult(resultPath);
-        try (FileWriter fileWriter = new FileWriter(directoryPath + File.separator + "jmh-result.csv");) {
+        try (FileWriter fileWriter = new FileWriter(directoryPath + File.separator + "jmh-result.csv")) {
             fileWriter.write(jmhResultCsvConverter.convert(jmhResult));
         } catch (IOException e) {
             e.printStackTrace();

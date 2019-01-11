@@ -28,7 +28,6 @@ public class JmhResultReader {
             BenchmarkResult benchmarkResult = new BenchmarkResult(benchmarkResultDto.getBenchmark(), warmupTime, benchmarkResultDto.getWarmupIterations(), measurementTime, benchmarkResultDto.getMeasurementIterations(), new Params(benchmarkResultDto.getParamsDto().getFunction(), Integer.parseInt(benchmarkResultDto.getParamsDto().getNumberOfElements()), benchmarkResultDto.getParamsDto().getTestObjectType()), primaryMetric);
             benchmarkResults.add(benchmarkResult);
         }
-        JmhResult jmhResult = new JmhResult(benchmarkResults);
-        return jmhResult;
+        return new JmhResult(benchmarkResults);
     }
 }

@@ -2,7 +2,6 @@ package idSet;
 
 import java.util.Objects;
 
-//todo test do equals i hashcode oraz test do getid
 public class IdWrapper<K, V> implements Identifiable {
 
     private K id;

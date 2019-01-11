@@ -10,8 +10,8 @@ import java.util.*;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 //todo complex benchmark
-@Warmup(iterations = 1, time = 100, timeUnit = MILLISECONDS)
-@Measurement(iterations = 20, time = 20, timeUnit = MILLISECONDS)
+@Warmup(iterations = 1, time = 200, timeUnit = MILLISECONDS)
+@Measurement(iterations = 100, time = 20, timeUnit = MILLISECONDS)
 @Fork(value = 5)
 @State(Scope.Thread)
 public class FlexSet_Benchmark {
@@ -38,12 +38,12 @@ public class FlexSet_Benchmark {
     private HashSet<Object> hashSet_remove;
     private FlexSet<Identifiable> flexSet_remove;
 
-    //@Param({"1", "2", "4", "8", "16", "32", "64", "128", "256", "512", "1024", "2048", "4096", "8192", "16384", "32768", "65536", "131072"})
-    @Param({"1024"})
+    @Param({"1", "2", "4", "8", "16", "32", "64", "128", "256", "512", "1024", "2048", "4096", "8192", "16384", "32768", "65536", "131072"})
+    //@Param({"1", "2", "4", "8"})
     private int numberOfElements;
 
-    //@Param({"0", "1", "2", "3"})
-    @Param({"3"})
+    @Param({"0", "1", "2", "3"})
+    //@Param({"3"})
     private int function;
 
     //@Param({"0", "1"})
@@ -116,7 +116,7 @@ public class FlexSet_Benchmark {
         }
     }
 
-/*    @Benchmark
+    @Benchmark
     public void timeAdd_HashMap(Blackhole bh) {
         for (int i = 0; i < numberOfElements; i++) {
             bh.consume(hashMap_add.put(ids[i], testObjects[i]));
@@ -163,7 +163,7 @@ public class FlexSet_Benchmark {
         for (int i = 0; i < numberOfElements; i++) {
             bh.consume(flexSet_contains.contains(testObjects[i]));
         }
-    }*/
+    }
 
     @Benchmark
     public void timeRemoveId_HashMap(Blackhole bh) {
@@ -180,7 +180,7 @@ public class FlexSet_Benchmark {
     }
 
     @Benchmark
-    public void timeRemoveValue_HashMap(Blackhole bh) {
+    public void timeRemoveValue_HashSet(Blackhole bh) {
         for (int i = 0; i < numberOfElements; i++) {
             bh.consume(hashSet_remove.remove(testObjects[i]));
         }

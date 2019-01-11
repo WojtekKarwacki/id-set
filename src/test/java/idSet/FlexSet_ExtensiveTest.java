@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
+import static junit.framework.Assert.assertFalse;
 import static junit.framework.TestCase.assertTrue;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -137,19 +138,22 @@ public class FlexSet_ExtensiveTest {
 
     @Test
     public void extensiveTest5() {
-        ThreadLocalRandom generator = ThreadLocalRandom.current();
-        FlexSet<TestObject_0> flexSet = FlexSet.instance();
-        Set<TestObject_0> set = new HashSet<>();
-        for (int i = 0; i < 8192; i++) {
-            set.add(new TestObject_0(generator.nextInt(1024)));
+        for (int j=0; j<1024; j++) {
+            ThreadLocalRandom generator = ThreadLocalRandom.current();
+            FlexSet<TestObject_0> flexSet = FlexSet.instance();
+            Set<TestObject_0> set = new HashSet<>();
+            for (int i = 0; i < 8192; i++) {
+                set.add(new TestObject_0(generator.nextInt(1024)));
+            }
+            for (TestObject_0 testObject : set) {
+                assertTrue(flexSet.add(testObject));
+            }
+            for (TestObject_0 testObject : set) {
+                assertTrue(flexSet.remove(testObject));
+            }
+            assertTrue(flexSet.isEmpty());
         }
-        for (TestObject_0 testObject : set) {
-            assertTrue(flexSet.add(testObject));
-        }
-        for (TestObject_0 testObject : set) {
-            assertTrue(flexSet.remove(testObject));
-        }
-        assertTrue(flexSet.isEmpty());
+
     }
 
     @Test
@@ -170,5 +174,45 @@ public class FlexSet_ExtensiveTest {
         return new TestObject_0(i * limit);
     }
 
+    @Test
+    public void extensiveTest7() {
+        FlexSet<ComplexTestObject> flexSet = FlexSet.instance();
+        for (int i=0; i< 128; i++) {
+            assertTrue(flexSet.removeId(new ComplexTestObject.IntegerId(i)) == null);
+        }
+        for (int i=0; i< 128; i++) {
+            assertTrue(!flexSet.remove(new ComplexTestObject(new ComplexTestObject.IntegerId(i))));
+        }
+        for (int i=0; i< 128; i++) {
+            assertTrue(flexSet.add(new ComplexTestObject(new ComplexTestObject.IntegerId(i))));
+        }
+        for (int i=0; i< 128; i++) {
+            assertTrue(flexSet.containsId(new ComplexTestObject.IntegerId(i)));
+        }
+        for (int i=0; i< 128; i++) {
+            assertTrue(flexSet.contains(new ComplexTestObject(new ComplexTestObject.IntegerId(i))));
+        }
+        for (int i=0; i< 128; i++) {
+            assertTrue(flexSet.removeId(new ComplexTestObject.IntegerId(i)) != null);
+        }
+        for (int i=0; i< 128; i++) {
+            assertTrue(flexSet.removeId(new ComplexTestObject.IntegerId(i)) == null);
+        }
+        for (int i=0; i< 128; i++) {
+            assertTrue(!flexSet.remove(new ComplexTestObject(new ComplexTestObject.IntegerId(i))));
+        }
+        for (int i=0; i< 128; i++) {
+            assertTrue(flexSet.add(new ComplexTestObject(new ComplexTestObject.IntegerId(i))));
+        }
+        for (int i=0; i< 128; i++) {
+            assertTrue(flexSet.containsId(new ComplexTestObject.IntegerId(i)));
+        }
+        for (int i=0; i< 128; i++) {
+            assertTrue(flexSet.contains(new ComplexTestObject(new ComplexTestObject.IntegerId(i))));
+        }
+        for (int i=0; i< 128; i++) {
+            assertTrue(flexSet.remove(new ComplexTestObject(new ComplexTestObject.IntegerId(i))));
+        }
+    }
 
 }

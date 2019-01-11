@@ -283,7 +283,7 @@ public class FlexSet_BoundaryTest {
     }
 
     @Test
-    public void shouldTreeify() {
+    public void shouldTreeifyAndUntreeifyRefs() {
         FlexSet<TestObject_0> flexSet = FlexSet.instance();
         for (int i=0; i<FlexSet.ID_REF_TREEIFY_THRESHOLD; i++) {
             flexSet.add(new TestObject_0(i*1024));

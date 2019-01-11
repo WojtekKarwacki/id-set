@@ -19,7 +19,7 @@ public class TestObject_0 implements Identifiable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         TestObject_0 that = (TestObject_0) o;
-        return id == that.id;
+        return id.equals(that.id);
     }
 
     @Override

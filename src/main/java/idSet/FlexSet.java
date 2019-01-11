@@ -1,14 +1,13 @@
 package idSet;
 
+import sun.reflect.generics.tree.Tree;
+
 import java.lang.reflect.Array;
 import java.util.*;
 
+//todo do zastanowienia sie nad lazy init w idref
+//todo framework do benchmarkow,
 
-//todo performance test do lazy init idref
-//todo performance test do shrink (dobry)
-//todo porzadny extensive test wykonujacy wszystkie sensowne operacje
-
-//todo wtf order
 public class FlexSet<E extends Identifiable> implements IdSet<E>, Identifiable {
 
     // package private access for test purposes
@@ -156,25 +155,28 @@ public class FlexSet<E extends Identifiable> implements IdSet<E>, Identifiable {
         int hashCode = e.getId().hashCode();
         int modHashCode = modHashCode(hashCode);
         IdRef<E> idRef = elements[modHashCode];
-        if (idRef.add(e, hashCode, true)) {
-            treeifyIfNeeded(idRef, modHashCode, elements);
-            expandOnAdditionIfNeeded();
+        if (idRef.add(e, hashCode)) {
+            if (expandOnAdditionIfNeeded()) {
+                treeifyIfNeeded(idRef, modHashCode, elements);
+            }
             return true;
         }
         return false;
     }
 
-    private void treeifyIfNeeded(IdRef<E> idRef, int modHashCode, IdRef<E>[] elements) {
-        if (idRef.size == ID_REF_TREEIFY_THRESHOLD && !(idRef instanceof TreeIdRef)) {
-            elements[modHashCode] = TreeIdRef.fromIdRef(idRef);
-        }
-    }
-
-    private void expandOnAdditionIfNeeded() {
+    private boolean expandOnAdditionIfNeeded() {
         size++;
         if ((capacity < MAX_CAPACITY) && (size > expansionThreshold)) {
             capacity <<= 1;
             rebuild();
+            return false;
+        }
+        return true;
+    }
+
+    private void treeifyIfNeeded(IdRef<E> idRef, int modHashCode, IdRef<E>[] elements) {
+        if (idRef.size == ID_REF_TREEIFY_THRESHOLD && idRef.getClass() == IdRef.class) {
+            elements[modHashCode] = TreeIdRef.fromIdRef(idRef);
         }
     }
 
@@ -184,7 +186,6 @@ public class FlexSet<E extends Identifiable> implements IdSet<E>, Identifiable {
         this.elements = rebuildElements();
     }
 
-    //todo uzyte indexy tutaj uzyc
     private IdRef<E>[] rebuildElements() {
         IdRef<E>[] elements = initElements();
         for (IdRef<E> element : this.elements) {
@@ -193,35 +194,23 @@ public class FlexSet<E extends Identifiable> implements IdSet<E>, Identifiable {
         return elements;
     }
 
-    //todo refaktor ogolny
     private void rebuildElement(IdRef<E>[] elements, IdRef<E> idRef) {
-        //todo podwojny check niepotrzebny
         while (idRef != null) {
-            if (idRef.next != null) {
-                if (idRef.e == null) {
-                    idRef = idRef.next;
-                } else {
-                    int hashCode = idRef.hashCode;
-                    int modHashCode = modHashCode(hashCode);
-                    IdRef<E> idRefToRebuild = elements[modHashCode];
-                    idRefToRebuild.add(idRef.e, hashCode, false);
-                    treeifyIfNeeded(idRefToRebuild, modHashCode, elements);
-                    idRef = idRef.next;
-                }
-            } else if (idRef.e != null) {
-                int hashCode = idRef.hashCode;
-                int modHashCode = modHashCode(hashCode);
-                IdRef<E> idRefToRebuild = elements[modHashCode];
-                idRefToRebuild.add(idRef.e, hashCode, false);
-                treeifyIfNeeded(idRefToRebuild, modHashCode, elements);
-                break;
-            } else {
-                break;
+            if (idRef.e != null) {
+                doRebuildElement(elements, idRef);
             }
-
-
+            idRef = idRef.next;
         }
     }
+
+    private void doRebuildElement(IdRef<E>[] elements, IdRef<E> idRef) {
+        int hashCode = idRef.hashCode;
+        int modHashCode = modHashCode(hashCode);
+        IdRef<E> idRefToRebuild = elements[modHashCode];
+        idRefToRebuild.add(idRef.e, hashCode);
+        treeifyIfNeeded(idRefToRebuild, modHashCode, elements);
+    }
+
 
     @Override
     public boolean remove(Object o) {
@@ -236,22 +225,25 @@ public class FlexSet<E extends Identifiable> implements IdSet<E>, Identifiable {
         IdRef<E> idRef = elements[modHashCode];
         E e = idRef.removeId(id, hashCode);
         if (e != null) {
-            shrinkOnRemovalIfNeeded();
-            untreeifyIfNeeded(idRef, modHashCode, elements);
+            if (shrinkOnRemovalIfNeeded()) {
+                untreeifyIfNeeded(idRef, modHashCode, elements);
+            }
         }
         return e;
     }
 
-    private void shrinkOnRemovalIfNeeded() {
+    private boolean shrinkOnRemovalIfNeeded() {
         size--;
         if ((capacity > 63) && (size < shrinkThreshold)) {
             capacity >>= 2;
             rebuild();
+            return false;
         }
+        return true;
     }
 
     private void untreeifyIfNeeded(IdRef<E> idRef, int modHashCode, IdRef<E>[] elements) {
-        if (idRef.size == ID_REF_UNTREEIFY_THRESHOLD && (idRef instanceof TreeIdRef)) {
+        if (idRef.size == ID_REF_UNTREEIFY_THRESHOLD && idRef.getClass() == TreeIdRef.class) {
             elements[modHashCode] = TreeIdRef.toIdRef(idRef);
         }
     }
@@ -476,11 +468,7 @@ public class FlexSet<E extends Identifiable> implements IdSet<E>, Identifiable {
         private IdRef() {
         }
 
-        public E getElem() {
-            return e;
-        }
-
-        boolean add(E e, int hashCode, boolean order) {
+        boolean add(E e, int hashCode) {
             if (checkFirst(e) && (setUpIfEmpty(e, hashCode) || setUpAtTheBegginingIfNeeded(e, hashCode) || skipLowerHashCodesAndProceedWithAdding(e, hashCode))) {
                 size++;
                 return true;
@@ -671,7 +659,7 @@ public class FlexSet<E extends Identifiable> implements IdSet<E>, Identifiable {
         private TreeIdRef<E> left;
         private TreeIdRef<E> right;
 
-        private IdRef<E> block;
+        private IdRef<E> block = new IdRef<>();
 
 
         private int nodesCount;
@@ -680,67 +668,64 @@ public class FlexSet<E extends Identifiable> implements IdSet<E>, Identifiable {
         }
 
         @Override
-        boolean add(E e, int hashCode, boolean order) {
-            if (addByHashCode(this, null, e, hashCode, 0, order)) {
+        boolean add(E e, int hashCode) {
+            if (addByHashCode(this, null, e, hashCode, 0)) {
                 size++;
                 return true;
             }
             return false;
         }
 
-        private boolean addByHashCode(TreeIdRef<E> current, TreeIdRef<E> parent, E e, int hashCode, int consecutiveNodesCount, boolean order) {
+        private boolean addByHashCode(TreeIdRef<E> current, TreeIdRef<E> parent, E e, int hashCode, int consecutiveNodesCount) {
             if (hashCode == current.hashCode) {
-                return handleEqualHashCodes(current, parent, e, hashCode, consecutiveNodesCount, order);
+                return handleEqualHashCodes(current, parent, e, hashCode, consecutiveNodesCount);
             } else if (hashCode < current.hashCode) {
-                return checkLeft(current, e, hashCode, consecutiveNodesCount, order) || addByHashCode(current.left, current, e, hashCode, consecutiveNodesCount + 1, order);
+                return checkLeft(current, e, hashCode, consecutiveNodesCount) || addByHashCode(current.left, current, e, hashCode, consecutiveNodesCount + 1);
             } else {
-                return checkRight(current, e, hashCode, consecutiveNodesCount, order) || addByHashCode(current.right, current, e, hashCode, consecutiveNodesCount + 1, order);
+                return checkRight(current, e, hashCode, consecutiveNodesCount) || addByHashCode(current.right, current, e, hashCode, consecutiveNodesCount + 1);
             }
         }
 
-        private boolean handleEqualHashCodes(TreeIdRef<E> current, TreeIdRef<E> parent, E e, int hashCode, int consecutiveNodesCount, boolean order) {
-            return !checkFirst(current, e) && (handleNull(current, parent, e, consecutiveNodesCount, order) || handleBlock(current, e, hashCode));
+        private boolean handleEqualHashCodes(TreeIdRef<E> current, TreeIdRef<E> parent, E e, int hashCode, int consecutiveNodesCount) {
+            return !checkFirst(current, e) && (handleNull(current, parent, e, consecutiveNodesCount) || handleBlock(current, e, hashCode));
         }
 
         private boolean checkFirst(TreeIdRef<E> current, E e) {
             return e.equals(current.e);
         }
 
-        private boolean handleNull(TreeIdRef<E> current, TreeIdRef<E> parent, E e, int consecutiveNodesCount, boolean order) {
+        private boolean handleNull(TreeIdRef<E> current, TreeIdRef<E> parent, E e, int consecutiveNodesCount) {
             if (current.e == null) {
                 current.e = e;
                 parent.next = current;
-                rebuildTreeIdRefIfNeeded(consecutiveNodesCount, order);
+                rebuildTreeIdRefIfNeeded(consecutiveNodesCount);
                 return true;
             }
             return false;
         }
 
         private boolean handleBlock(TreeIdRef<E> current, E e, int hashCode) {
-            if (current.block == null) {
-                current.block = new IdRef<>();
-            }
             current.next = current.block;
-            return current.block.add(e, hashCode, true);
+            return current.block.add(e, hashCode);
         }
 
-        private boolean checkLeft(TreeIdRef<E> current, E e, int hashCode, int consecutiveNodesCount, boolean order) {
+        private boolean checkLeft(TreeIdRef<E> current, E e, int hashCode, int consecutiveNodesCount) {
             if (current.left == null) {
                 current.left = createLinkedTreeIdRef(current);
                 current.left.e = e;
                 current.left.hashCode = hashCode;
-                rebuildTreeIdRefIfNeeded(consecutiveNodesCount, order);
+                rebuildTreeIdRefIfNeeded(consecutiveNodesCount);
                 return true;
             }
             return false;
         }
 
-        private boolean checkRight(TreeIdRef<E> current, E e, int hashCode, int consecutiveNodesCount, boolean order) {
+        private boolean checkRight(TreeIdRef<E> current, E e, int hashCode, int consecutiveNodesCount) {
             if (current.right == null) {
                 current.right = createLinkedTreeIdRef(current);
                 current.right.e = e;
                 current.right.hashCode = hashCode;
-                rebuildTreeIdRefIfNeeded(consecutiveNodesCount, order);
+                rebuildTreeIdRefIfNeeded(consecutiveNodesCount);
                 return true;
             }
             return false;
@@ -795,7 +780,7 @@ public class FlexSet<E extends Identifiable> implements IdSet<E>, Identifiable {
             }
             IdRef<E> block = treeIdRef.block;
             if (e.getId().equals(id)) {
-                if (block == null || block.size == 0) {
+                if (block.size == 0) {
                     treeIdRef.e = null;
                 } else {
                     treeIdRef.e = block.removeId(block.e.getId(), hashCode);
@@ -807,9 +792,9 @@ public class FlexSet<E extends Identifiable> implements IdSet<E>, Identifiable {
         }
 
 
-        private void rebuildTreeIdRefIfNeeded(int consecutiveNodesCount, boolean order) {
+        private void rebuildTreeIdRefIfNeeded(int consecutiveNodesCount) {
             nodesCount++;
-            if (order && (28 - Integer.numberOfLeadingZeros(nodesCount) + ID_REF_TREEIFY_THRESHOLD < consecutiveNodesCount)) {
+            if ((28 - Integer.numberOfLeadingZeros(nodesCount) + ID_REF_TREEIFY_THRESHOLD < consecutiveNodesCount)) {
                 rebuildTreeIdRef();
             }
         }
@@ -867,24 +852,24 @@ public class FlexSet<E extends Identifiable> implements IdSet<E>, Identifiable {
         private TreeIdRef<E> rebuildFromSorted(TreeIdRef<E>[] temporarySortedTreeIdRefs) {
             int index = temporarySortedTreeIdRefs.length >> 1;
             TreeIdRef<E> midTreeIdRef = temporarySortedTreeIdRefs[index].createStandaloneCopy();
-            FlexSet<IntegerId> usedIndices = new FlexSet<>(nodesCount << 1);
-            usedIndices.add(new IntegerId(index));
+            FlexSet<IntegerIdentifiable> usedIndices = new FlexSet<>(nodesCount << 1);
+            usedIndices.add(new IntegerIdentifiable(index));
             midTreeIdRef.nodesCount = rebuildForBoth(temporarySortedTreeIdRefs, midTreeIdRef, 0, index, temporarySortedTreeIdRefs.length, usedIndices);
             return midTreeIdRef;
         }
 
-        private int rebuildForBoth(TreeIdRef<E>[] temporarySortedTreeIdRefs, TreeIdRef<E> midTreeIdRef, int from, int index, int to, FlexSet<IntegerId> usedIndices) {
+        private int rebuildForBoth(TreeIdRef<E>[] temporarySortedTreeIdRefs, TreeIdRef<E> midTreeIdRef, int from, int index, int to, FlexSet<IntegerIdentifiable> usedIndices) {
             int nodesCount = rebuildForLeft(temporarySortedTreeIdRefs, midTreeIdRef, from, index, usedIndices);
             nodesCount += rebuildForRight(temporarySortedTreeIdRefs, midTreeIdRef, index, to, usedIndices);
             return nodesCount;
         }
 
-        private int rebuildForLeft(TreeIdRef<E>[] temporarySortedTreeIdRefs, TreeIdRef<E> midTreeIdRef, int from, int to, FlexSet<IntegerId> usedIndices) {
+        private int rebuildForLeft(TreeIdRef<E>[] temporarySortedTreeIdRefs, TreeIdRef<E> midTreeIdRef, int from, int to, FlexSet<IntegerIdentifiable> usedIndices) {
             midTreeIdRef.next = null;
             int diff = to - from;
             if (diff != 0) {
                 int index = (diff >> 1) + from;
-                if (usedIndices.add(new IntegerId(index))) {
+                if (usedIndices.add(new IntegerIdentifiable(index))) {
                     TreeIdRef<E> treeIdRef = temporarySortedTreeIdRefs[index].createStandaloneCopy();
                     midTreeIdRef.left = treeIdRef;
                     midTreeIdRef.next = treeIdRef;
@@ -895,11 +880,11 @@ public class FlexSet<E extends Identifiable> implements IdSet<E>, Identifiable {
             return 0;
         }
 
-        private int rebuildForRight(TreeIdRef<E>[] temporarySortedTreeIdRefs, TreeIdRef<E> midTreeIdRef, int from, int to, FlexSet<IntegerId> usedIndices) {
+        private int rebuildForRight(TreeIdRef<E>[] temporarySortedTreeIdRefs, TreeIdRef<E> midTreeIdRef, int from, int to, FlexSet<IntegerIdentifiable> usedIndices) {
             int diff = to - from;
             if (diff != 1) {
                 int index = (diff >> 1) + from;
-                if (usedIndices.add(new IntegerId(index))) {
+                if (usedIndices.add(new IntegerIdentifiable(index))) {
                     TreeIdRef<E> treeIdRef = temporarySortedTreeIdRefs[index].createStandaloneCopy();
                     midTreeIdRef.right = treeIdRef;
                     getLast(midTreeIdRef).next = treeIdRef;
@@ -926,28 +911,29 @@ public class FlexSet<E extends Identifiable> implements IdSet<E>, Identifiable {
         }
 
         private static <E extends Identifiable> TreeIdRef<E> fromIdRef(IdRef<E> idRef) {
-            //todo zrobic jakis sensowny falueOf w treeIfRefie - przepisuje niepotrzebnie
-            //todo + zamiast ladowac do block za kazdym razem robie nowy tree
             TreeIdRef<E> treeIdRef = new TreeIdRef<>();
             treeIdRef.e = idRef.next.next.next.e;
             treeIdRef.hashCode = idRef.next.next.next.hashCode;
-            treeIdRef.block = new IdRef<>();
-            treeIdRef.size++;
-            treeIdRef.nodesCount++;
-            treeIdRef.add(idRef.next.e, idRef.next.hashCode, false);
-            treeIdRef.add(idRef.next.next.next.next.next.e, idRef.next.next.next.next.next.hashCode, false);
-            treeIdRef.add(idRef.e, idRef.hashCode, false);
-            treeIdRef.add(idRef.next.next.e, idRef.next.next.hashCode, false);
-            treeIdRef.add(idRef.next.next.next.next.e, idRef.next.next.next.next.hashCode, false);
-            treeIdRef.add(idRef.next.next.next.next.next.next.e, idRef.next.next.next.next.next.next.hashCode, false);
+            treeIdRef.size = 1;
+            treeIdRef.nodesCount = 1;
+            fromIdRefHelp(treeIdRef, idRef.next);
+            fromIdRefHelp(treeIdRef, idRef.next.next.next.next.next);
+            fromIdRefHelp(treeIdRef, idRef);
+            fromIdRefHelp(treeIdRef, idRef.next.next);
+            fromIdRefHelp(treeIdRef, idRef.next.next.next.next);
+            fromIdRefHelp(treeIdRef, idRef.next.next.next.next.next.next);
             return treeIdRef;
+        }
+
+        private static <E extends Identifiable> void fromIdRefHelp(TreeIdRef<E> treeIdRef, IdRef<E> idRef) {
+            treeIdRef.add(idRef.e, idRef.hashCode);
         }
 
         private static <E extends Identifiable> IdRef<E> toIdRef(IdRef<E> treeIdRef) {
             IdRef<E> idRef = new IdRef<>();
             while (treeIdRef != null) {
                 if (treeIdRef.e != null) {
-                    idRef.add(treeIdRef.e, treeIdRef.hashCode, false);
+                    idRef.add(treeIdRef.e, treeIdRef.hashCode);
                 }
                 treeIdRef = treeIdRef.next;
             }
@@ -956,11 +942,11 @@ public class FlexSet<E extends Identifiable> implements IdSet<E>, Identifiable {
 
     }
 
-    private static class IntegerId implements Identifiable {
+    private static class IntegerIdentifiable implements Identifiable {
 
-        private int integer;
+        private final int integer;
 
-        private IntegerId(int integer) {
+        private IntegerIdentifiable(int integer) {
             this.integer = integer;
         }
 
@@ -971,7 +957,7 @@ public class FlexSet<E extends Identifiable> implements IdSet<E>, Identifiable {
 
         @Override
         public boolean equals(Object o) {
-            return o != null && integer == ((IntegerId) o).integer;
+            return o != null && integer == ((IntegerIdentifiable) o).integer;
         }
 
         @Override

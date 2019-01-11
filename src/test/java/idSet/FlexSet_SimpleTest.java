@@ -367,8 +367,9 @@ public class FlexSet_SimpleTest {
     public void shouldReturnIdSet() {
         Set<Integer> intSet = new HashSet<>();
         Set<TestObject_0> set = new HashSet<>();
-        for (int i : intSet) {
+        for (int i=0; i<8; i++) {
             set.add(new TestObject_0(i));
+            intSet.add(i);
         }
         FlexSet<TestObject_0> flexSet = FlexSet.instance();
         flexSet.addAll(set);
