@@ -1,7 +1,5 @@
 package jmh;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 public class PrimaryMetric {
 
     private double score;

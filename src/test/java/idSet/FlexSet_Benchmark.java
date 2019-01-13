@@ -1,18 +1,17 @@
 package idSet;
 
-import com.google.common.collect.Maps;
 import jmh.JmhResultManager;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
-import org.openjdk.jmh.runner.options.OptionsBuilder;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-//todo complex benchmark
+
 @Warmup(iterations = 1, time = 200, timeUnit = MILLISECONDS)
 @Measurement(iterations = 100, time = 20, timeUnit = MILLISECONDS)
-@Fork(value = 5)
+@Fork(value = 10)
 @State(Scope.Thread)
 public class FlexSet_Benchmark {
 
@@ -38,16 +37,16 @@ public class FlexSet_Benchmark {
     private HashSet<Object> hashSet_remove;
     private FlexSet<Identifiable> flexSet_remove;
 
-    @Param({"1", "2", "4", "8", "16", "32", "64", "128", "256", "512", "1024", "2048", "4096", "8192", "16384", "32768", "65536", "131072"})
-    //@Param({"1", "2", "4", "8"})
+    @Param({"1", "2", "4", "8", "16", "32", "64", "128", "256", "512", "1024", "2048", "4096", "8192", "16384", "32768", "65536", "131072", "262144", "524288"})
+    //@Param({"256", "512"})
     private int numberOfElements;
 
     @Param({"0", "1", "2", "3"})
     //@Param({"3"})
     private int function;
 
-    //@Param({"0", "1"})
     @Param({"0", "1"})
+    //@Param({"0"})
     private int testObjectType;
 
     @Setup
@@ -189,7 +188,7 @@ public class FlexSet_Benchmark {
     @Benchmark
     public void timeRemoveValue_FlexSet(Blackhole bh) {
         for (int i = 0; i < numberOfElements; i++) {
-            bh.consume(flexSet_remove.removeId(testObjects[i]));
+            bh.consume(flexSet_remove.remove(testObjects[i]));
         }
     }
 

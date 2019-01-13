@@ -1,12 +1,7 @@
 package idSet;
 
-import sun.reflect.generics.tree.Tree;
-
 import java.lang.reflect.Array;
 import java.util.*;
-
-//todo do zastanowienia sie nad lazy init w idref
-//todo framework do benchmarkow,
 
 public class FlexSet<E extends Identifiable> implements IdSet<E>, Identifiable {
 

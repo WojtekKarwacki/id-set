@@ -1,7 +1,5 @@
 package idSet;
 
-import java.util.Objects;
-
 public class TestObject_5 implements Identifiable {
     int id;
 
