@@ -5,13 +5,13 @@ import java.util.*;
 
 public class FlexSet<E extends Identifiable> implements IdSet<E>, Identifiable {
 
+    private static final int MAX_CAPACITY = Integer.MAX_VALUE >> 1;
+    private static final int DEFAULT_INITIAL_CAPACITY = 16; // must be greater than or equal 16
+
     // package private access for test purposes
     static final int ID_REF_TREEIFY_THRESHOLD = 7;
     // package private access for test purposes
     static final int ID_REF_UNTREEIFY_THRESHOLD = 5;
-
-    private static final int MAX_CAPACITY = Integer.MAX_VALUE >> 1;
-    private static final int DEFAULT_INITIAL_CAPACITY = 16; // must be greater than or equal 16
 
     // package private access for test purposes
     IdRef<E>[] elements;
